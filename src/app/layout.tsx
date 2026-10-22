@@ -12,7 +12,7 @@ const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", 
 const body = Inter({ subsets: ["latin"], variable: "--font-body", weight: ["400", "500", "600", "700", "800"] });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-mono", weight: ["400", "500"] });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://agrolink.africa";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://agrolinksourcing.com";
 const SITE_DESCRIPTION =
   "AgroLink connects African agricultural products, producers, suppliers and global markets — through sourcing, trade and professionally coordinated farming projects.";
 

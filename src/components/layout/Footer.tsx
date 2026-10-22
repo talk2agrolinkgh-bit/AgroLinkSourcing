@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { WHATSAPP_NUMBER_DISPLAY } from "@/lib/whatsapp";
+import { CONTACT_EMAIL, CONTACT_LOCATION, SHOW_DEMO_NOTICE } from "@/lib/contact";
 
 export function Footer() {
   return (
@@ -38,14 +39,16 @@ export function Footer() {
         <div>
           <p className="font-display text-sm font-semibold mb-3 text-gold-200">Talk to us</p>
           <ul className="space-y-2 text-sm text-cream-100/70">
-            <li>WhatsApp: <span className="font-mono">{WHATSAPP_NUMBER_DISPLAY}</span></li>
-            <li>hello@agrolink.africa</li>
-            <li>Accra, Ghana</li>
+            {WHATSAPP_NUMBER_DISPLAY && (
+              <li>WhatsApp: <span className="font-mono">{WHATSAPP_NUMBER_DISPLAY}</span></li>
+            )}
+            <li><a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-cream-50">{CONTACT_EMAIL}</a></li>
+            <li>{CONTACT_LOCATION}</li>
           </ul>
         </div>
       </div>
       <div className="border-t border-cream-50/10 py-5 text-center text-xs text-cream-100/50">
-        © {new Date().getFullYear()} AgroLink. All product and pricing data on this preview is demo data.
+        © {new Date().getFullYear()} AgroLink.{SHOW_DEMO_NOTICE && " All product and pricing data on this preview is demo data."}
       </div>
     </footer>
   );

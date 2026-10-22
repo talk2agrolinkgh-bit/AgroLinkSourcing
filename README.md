@@ -87,7 +87,7 @@ npm run db:push
 
 # 5. Seed demo data + create your first admin login
 npm run db:seed
-# → creates admin@agrolink.africa / agrolink-admin-2026 — CHANGE THIS PASSWORD
+# → creates admin@agrolinksourcing.com / agrolink-admin-2026 — CHANGE THIS PASSWORD
 #   immediately: update prisma/seed.ts or update the row directly, then re-hash
 #   with bcrypt before deploying anywhere public.
 
@@ -170,3 +170,23 @@ agrolink-app/
         ├── admin/                login (ungated) + (dashboard) (auth-gated)
         └── api/                  public routes + /admin/** (role-gated)
 ```
+
+
+## Going live checklist (agrolinksourcing.com)
+
+Vercel → Project → Settings → Environment Variables (then Redeploy, *without* build cache):
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | `https://agrolinksourcing.com` |
+| `NEXTAUTH_URL` | `https://agrolinksourcing.com` |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | your number, digits only, e.g. `233201234567` |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | e.g. `hello@agrolinksourcing.com` |
+| `RESEND_API_KEY` | from resend.com → API Keys (domain must show Verified) |
+| `EMAIL_FROM` | an address on the domain, e.g. `hello@agrolinksourcing.com` |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary dashboard → top-left cloud name |
+| `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | name of an **Unsigned** upload preset |
+| `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Cloudinary → Settings → Access Keys |
+
+`NEXT_PUBLIC_*` values are baked in at build time, so a redeploy is required after changing them.
+Email prefers Resend when `RESEND_API_KEY` is set and falls back to Brevo (`BREVO_API_KEY`).

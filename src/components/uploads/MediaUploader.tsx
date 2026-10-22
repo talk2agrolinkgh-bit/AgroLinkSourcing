@@ -33,9 +33,13 @@ export function MediaUploader({
   if (!isCloudinaryConfigured) {
     return (
       <div className="border-2 border-dashed border-forest-100 rounded-xl2 p-5 text-center text-xs text-ink-soft">
-        {kind === "video" ? "Video" : kind === "document" ? "Document" : "Photo"} upload isn&apos;t configured yet — set{" "}
-        <code className="font-mono">NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME</code> and{" "}
-        <code className="font-mono">NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET</code> (see README).
+        {kind === "video" ? "Video" : kind === "document" ? "Document" : "Photo"} upload is temporarily unavailable.
+        {process.env.NODE_ENV !== "production" && (
+          <>
+            {" "}Set <code className="font-mono">NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME</code> and{" "}
+            <code className="font-mono">NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET</code> (see README).
+          </>
+        )}
       </div>
     );
   }

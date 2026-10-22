@@ -3,7 +3,7 @@
 
 import type { MetadataRoute } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://agrolink.africa";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://agrolinksourcing.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {
