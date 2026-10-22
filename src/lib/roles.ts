@@ -9,7 +9,7 @@
 // Triggers wired in:
 //   BUYER    — submitting a sourcing request or a product inquiry
 //   FARMER   — requesting participation in a Farm For You project
-//   STUDENT  — expressing interest in an Academy course (enroll click)
+//   ACADEMY_STUDENT — expressing interest in an Academy course (enroll click)
 //   SUPPLIER — deliberately NOT automatic on submission; a self-reported
 //              "I'm a supplier" claim isn't worth much. It elevates only
 //              when an admin actually verifies one of their listings — see
