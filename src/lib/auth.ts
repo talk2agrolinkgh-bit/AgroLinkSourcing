@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
       // with our own Brevo HTTP API implementation in mail.ts.
       server: { host: "", port: 0, auth: { user: "", pass: "" } },
       maxAge: 15 * 60, // magic link valid for 15 minutes
-      async sendVerificationRequest({ identifier, url }) {
+      async sendVerificationRequest({ identifier, url }: { identifier: string; url: string }) {
         console.log(`[auth] sending magic link to ${identifier}`);
         await sendMagicLinkEmail(identifier, url);
         console.log(`[auth] magic link sent to ${identifier}`);
