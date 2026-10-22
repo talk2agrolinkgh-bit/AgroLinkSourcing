@@ -53,18 +53,13 @@ export const authOptions: NextAuthOptions = {
     EmailProvider({
       // `server` is required by next-auth v4's type signature but unused —
       // sendVerificationRequest below fully replaces the default SMTP send
-      // with our own Gmail-SMTP-via-nodemailer implementation in mail.ts.
+      // with our own Brevo HTTP API implementation in mail.ts.
       server: { host: "", port: 0, auth: { user: "", pass: "" } },
       maxAge: 15 * 60, // magic link valid for 15 minutes
-
-      async sendVerificationRequest({
-        identifier,
-        url,
-      }: {
-        identifier: string;
-        url: string;
-      }) {
+      async sendVerificationRequest({ identifier, url }) {
+        console.log(`[auth] sending magic link to ${identifier}`);
         await sendMagicLinkEmail(identifier, url);
+        console.log(`[auth] magic link sent to ${identifier}`);
       },
     } as any),
   ],

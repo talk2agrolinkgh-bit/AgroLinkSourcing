@@ -122,9 +122,11 @@ src/lib/
   auth.ts          NextAuth config — one instance, two providers: Credentials
                    (admin, id "admin-credentials", bypasses the Prisma adapter)
                    and Email (public magic-link, via the Prisma adapter)
-  mail.ts          Sends the magic-link email via Gmail SMTP (nodemailer +
-                   an App Password — no domain ownership required); logs the
-                   link to the console instead if GMAIL_USER/GMAIL_APP_PASSWORD isn't set
+  mail.ts          Sends the magic-link email via Brevo's HTTP API (not SMTP —
+                   Gmail SMTP hung forever on Vercel since serverless platforms
+                   block outbound SMTP; Brevo needs only a verified single
+                   sender, no domain); logs the link to the console instead
+                   if BREVO_API_KEY/EMAIL_FROM isn't set
   og-logo.ts       The real emblem as a base64 data URI — embedded directly
                    into OG image cards so generation never depends on the
                    site being publicly reachable

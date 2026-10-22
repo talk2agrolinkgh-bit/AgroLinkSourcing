@@ -16,16 +16,23 @@ export function LoginForm() {
     setError(null);
     const email = new FormData(e.currentTarget).get("email") as string;
 
-    const result = await signIn("email", { email, redirect: false, callbackUrl: "/account" });
-    setLoading(false);
-
-    // signIn() with redirect:false does NOT throw on failure — it resolves
-    // with an `error` field. Checking it is the only way to know sending
-    // actually worked, rather than always claiming success.
-    if (result?.error) {
+    // signIn() with redirect:false resolves with an `error` field on a handled
+    // failure, but it THROWS (or never settles) when the server crashes or
+    // times out and returns a non-JSON response. Both paths must end the
+    // loading state — otherwise the button sticks on "Sending link…" forever.
+    try {
+      const result = await Promise.race([
+        signIn("email", { email, redirect: false, callbackUrl: "/account" }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 20_000)),
+      ]);
+      if (result?.error) throw new Error(result.error);
+    } catch (err) {
+      console.error("[login] sign-in link request failed:", err);
       setError("We couldn't send that email right now. Please try again in a moment, or contact AgroLink on WhatsApp.");
+      setLoading(false);
       return;
     }
+    setLoading(false);
     setSent(true);
   }
 

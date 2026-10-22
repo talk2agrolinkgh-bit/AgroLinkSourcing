@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         });
       }
     }
-    await elevateRoleIfVisitor(userId, "ACADEMY_STUDENT");
+    await elevateRoleIfVisitor(userId, "STUDENT");
   }
 
   await db.lead.create({

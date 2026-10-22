@@ -25,7 +25,7 @@ This package contains two things:
 - `prisma/seed.ts` — seeds demo products, suppliers, farm projects, academy modules, CMS blocks, and the first admin login
 - `src/lib/db.ts` — Prisma client
 - `src/lib/auth.ts` + `src/app/api/auth/[...nextauth]/route.ts` — **one NextAuth instance, two providers**: Credentials for the admin dashboard, and passwordless Email magic-link for buyers/suppliers/farmers/students
-- `src/lib/mail.ts` — sends the magic-link email via Gmail SMTP (using `nodemailer` + a Gmail App Password — no domain ownership required, unlike Resend/SendGrid/etc.; logs the link to the console instead if `GMAIL_USER`/`GMAIL_APP_PASSWORD` isn't set, so the flow is testable without email configured)
+- `src/lib/mail.ts` — sends the magic-link email via Brevo's HTTP API (not SMTP — Gmail SMTP was tried first, but serverless platforms block/drop outbound SMTP connections, which made sign-in hang forever with no error; Brevo needs no domain either, just a single verified sender address; logs the link to the console instead if `BREVO_API_KEY`/`EMAIL_FROM` isn't set, so the flow is testable without email configured)
 - `src/lib/whatsapp.ts` — WhatsApp deep-link helper + message templates
 - `src/lib/cloudinary.ts` + `src/components/uploads/MediaUploader.tsx` — direct browser-to-Cloudinary image/video/document uploads via an unsigned preset (no backend token exchange). Wired into all three upload zones: Admin → Add Product (photos), public List Your Product (photos + supporting documents), Admin → Post Update (photos + video). Without `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`/`NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` set, each zone shows a clear "not configured yet" message instead of pretending to accept files
 - `src/lib/cloudinary-admin.ts` + `src/app/api/media/delete/route.ts` — signed Cloudinary deletion, called automatically when someone removes a file from a form before submitting it. Scoped to only ever touch assets in AgroLink's own upload folder, which is why the endpoint doesn't need to be auth-gated even though guest forms call it
@@ -69,8 +69,9 @@ docker run --name agrolink-db -e POSTGRES_PASSWORD=agrolink -p 5432:5432 -d post
 # 3. Copy the env file and fill in your DB URL
 cp .env.example .env
 # Edit .env — set DATABASE_URL and NEXT_PUBLIC_WHATSAPP_NUMBER
-# For public sign-in emails, set GMAIL_USER and GMAIL_APP_PASSWORD (see
-# .env.example for the 3-step setup — no domain or new signup needed).
+# For public sign-in emails, set BREVO_API_KEY and EMAIL_FROM (see
+# .env.example for the 4-step setup — no domain needed, just a verified
+# single sender address).
 # Without it, magic-links are printed to the terminal in development instead
 # of emailed, so you can still test the sign-in flow end-to-end.
 # For image/video/document uploads, set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and
