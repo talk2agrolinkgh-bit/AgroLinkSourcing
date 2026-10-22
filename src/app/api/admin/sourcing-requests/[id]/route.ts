@@ -11,10 +11,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const session = await getServerSession(authOptions);
   if (!isAdminSession(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { status } = await req.json(); // one of SourcingRequestStatus
+  const { status, deskStatus } = await req.json(); // status: SourcingRequestStatus, deskStatus: DeskReviewStatus
+  const STATUSES = ["NEW", "CONTACTED", "SOURCING", "MATCHED", "NEGOTIATION", "CLOSED", "CANCELLED"];
+  const DESK = ["PENDING_REVIEW", "APPROVED", "REJECTED"];
+  if ((status && !STATUSES.includes(status)) || (deskStatus && !DESK.includes(deskStatus))) {
+    return NextResponse.json({ error: "Invalid value" }, { status: 400 });
+  }
   const request = await db.sourcingRequest.update({
     where: { id },
-    data: { status },
+    data: {
+      ...(status && { status }),
+      ...(deskStatus && { deskStatus, deskReviewedAt: new Date() }),
+    },
   });
   return NextResponse.json(request);
 }

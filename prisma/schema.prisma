@@ -105,6 +105,15 @@ model User {
   sessions            Session[]
 }
 
+// Whether a sourcing request may appear on the (members-only) Sourcing Desk.
+// New requests start PENDING_REVIEW — an admin must approve each one so
+// scam/fake posts never reach trained agents.
+enum DeskReviewStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
 enum SourcingAgentStatus {
   NONE     // hasn't applied
   PENDING  // applied, awaiting admin review
@@ -297,6 +306,8 @@ model SourcingRequest {
   email        String
   whatsapp     String
   status       SourcingRequestStatus   @default(NEW)
+  deskStatus     DeskReviewStatus      @default(PENDING_REVIEW)
+  deskReviewedAt DateTime?
   requirements BuyerRequirement[]
   messages     Message[]
   createdAt    DateTime                @default(now())

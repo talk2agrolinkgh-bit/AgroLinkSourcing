@@ -8,7 +8,8 @@
 
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { getSourcingDeskAccess } from "@/lib/sourcing-desk";
+import { getSourcingDeskAccess, hasGraduated, DESK_OPEN_STATUSES } from "@/lib/sourcing-desk";
+import { scrubContacts } from "@/lib/scrub";
 import { SectionHead } from "@/components/ui/badges";
 import { ApplyButton } from "@/components/sourcing-desk/ApplyButton";
 import { RespondForm } from "@/components/sourcing-desk/RespondForm";
@@ -18,8 +19,6 @@ export const metadata = {
   robots: { index: false, follow: false }, // never index a page gated behind approval
 };
 export const dynamic = "force-dynamic";
-
-const OPEN_STATUSES = ["NEW", "CONTACTED", "SOURCING"] as const;
 
 export default async function SourcingDeskPage() {
   const access = await getSourcingDeskAccess();
@@ -36,11 +35,22 @@ export default async function SourcingDeskPage() {
   }
 
   if (access.status === "NONE") {
+    const graduated = await hasGraduated(access.userId);
+    if (!graduated) {
+      return (
+        <Gate
+          eyebrow="Sourcing Desk"
+          title="Open to Academy graduates"
+          body="The Sourcing Desk is where trained agents see reviewed sourcing requests. To protect buyers and agents from scams, access is limited to graduates of the Produce-Sourcing Academy. Once AgroLink marks your course as completed you can apply here."
+          cta={<Link href="/academy" className="inline-flex items-center px-5 h-12 rounded-full bg-forest-700 text-cream-50 font-semibold hover:bg-forest-800 transition">View the Academy</Link>}
+        />
+      );
+    }
     return (
       <Gate
         eyebrow="Sourcing Desk"
         title="Apply for Sourcing Desk access"
-        body="This is where trained agents view live sourcing requests and offer to help fulfil them. Access is limited to graduates of the Produce-Sourcing Academy and is approved individually by AgroLink — completing the course makes you eligible to apply, not automatically approved."
+        body="You've completed the Academy, so you can apply. This is where trained agents view reviewed sourcing requests and offer to help fulfil them. Each application is approved individually by AgroLink."
         cta={<ApplyButton />}
       />
     );
@@ -69,7 +79,8 @@ export default async function SourcingDeskPage() {
   // APPROVED
   const [requests, myResponses] = await Promise.all([
     db.sourcingRequest.findMany({
-      where: { status: { in: [...OPEN_STATUSES] } },
+      // Only requests an admin has reviewed and approved for the desk.
+      where: { deskStatus: "APPROVED", status: { in: [...DESK_OPEN_STATUSES] } },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -96,20 +107,20 @@ export default async function SourcingDeskPage() {
       <SectionHead
         eyebrow="Sourcing Desk"
         title="Open sourcing requests"
-        sub="Buyer contact details stay with AgroLink — respond here and AgroLink will coordinate the connection."
+        sub="Every request here has been reviewed by AgroLink. Buyer names and contact details are never shown — respond here and AgroLink will coordinate the connection."
       />
 
       {requests.length === 0 ? (
-        <p className="text-sm text-ink-soft">No open requests right now — check back soon.</p>
+        <p className="text-sm text-ink-soft">No reviewed requests right now — new ones appear here after AgroLink approves them.</p>
       ) : (
         <div className="space-y-3">
           {requests.map((r) => (
             <div key={r.id} className="p-5 rounded-xl2 border border-forest-100 bg-cream-50 card-shadow">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-display font-semibold text-forest-800">{r.product}</p>
-                  <p className="text-sm text-ink-soft mt-1">{r.quantity} → {r.destination}</p>
-                  {r.specNotes && <p className="text-xs text-ink-soft mt-1">{r.specNotes}</p>}
+                  <p className="font-display font-semibold text-forest-800">{scrubContacts(r.product)}</p>
+                  <p className="text-sm text-ink-soft mt-1">{scrubContacts(r.quantity)} → {scrubContacts(r.destination)}</p>
+                  {r.specNotes && <p className="text-xs text-ink-soft mt-1">{scrubContacts(r.specNotes)}</p>}
                   <p className="text-xs font-mono text-ink-soft mt-2">
                     {r.timeline ? `Needed: ${r.timeline} · ` : ""}Submitted {new Date(r.createdAt).toLocaleDateString()}
                   </p>

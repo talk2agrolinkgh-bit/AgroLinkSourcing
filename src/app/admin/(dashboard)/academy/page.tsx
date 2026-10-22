@@ -2,12 +2,13 @@
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/admin/ui";
 import { CurriculumModal } from "@/components/admin/CurriculumModal";
+import { EnrollmentStatusSelect } from "@/components/admin/EnrollmentStatusSelect";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminAcademyPage() {
   const courses = await db.academyCourse.findMany({
-    include: { modules: { orderBy: { order: "asc" } }, enrollments: true },
+    include: { modules: { orderBy: { order: "asc" } }, enrollments: { include: { user: { select: { name: true, email: true } } }, orderBy: { createdAt: "desc" } } },
   });
 
   return (
@@ -46,13 +47,11 @@ export default async function AdminAcademyPage() {
           <tbody>
             {courses.flatMap((c) => c.enrollments).map((e: any) => (
               <tr key={e.id} className="border-b border-forest-100 last:border-0">
-                <td className="p-4 font-medium">{e.userId}</td>
+                <td className="p-4"><p className="font-medium">{e.user?.name || "—"}</p><p className="text-xs font-mono text-ink-soft">{e.user?.email}</p></td>
                 <td className="p-4 text-xs">{e.tier === "MENTORSHIP_TRAINING" ? "Mentorship + Training" : "Video Training Only"}</td>
                 <td className="p-4 font-mono text-xs">{new Date(e.createdAt).toLocaleDateString()}</td>
                 <td className="p-4">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${e.status === "active" ? "bg-forest-100 text-forest-700" : "bg-gold-100 text-gold-700"}`}>
-                    {e.status}
-                  </span>
+                  <EnrollmentStatusSelect id={e.id} initial={e.status} />
                 </td>
               </tr>
             ))}

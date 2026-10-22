@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { hasGraduated } from "@/lib/sourcing-desk";
 
 export async function POST() {
   const session = await getServerSession(authOptions);
@@ -10,6 +11,11 @@ export async function POST() {
     return NextResponse.json({ error: "Sign in first" }, { status: 401 });
   }
   const userId = (session.user as any).id as string;
+
+  // Only Academy graduates (enrollment marked completed by an admin) may apply.
+  if (!(await hasGraduated(userId))) {
+    return NextResponse.json({ error: "NOT_GRADUATED" }, { status: 403 });
+  }
 
   // Only move NONE -> PENDING. Doesn't touch REVOKED (an admin revoked
   // access for a reason; re-applying shouldn't silently undo that) or

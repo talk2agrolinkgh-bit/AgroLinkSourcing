@@ -9,6 +9,7 @@ import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { DESK_OPEN_STATUSES } from "@/lib/sourcing-desk";
 
 const RespondSchema = z.object({ body: z.string().min(5).max(2000) });
 
@@ -25,6 +26,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (user?.sourcingAgentStatus !== "APPROVED") {
     return NextResponse.json({ error: "Sourcing Desk access required" }, { status: 403 });
   }
+
+  // Agents can only respond to requests an admin approved for the desk.
+  const target = await db.sourcingRequest.findFirst({
+    where: { id, deskStatus: "APPROVED", status: { in: [...DESK_OPEN_STATUSES] } },
+    select: { id: true },
+  });
+  if (!target) return NextResponse.json({ error: "Request not available" }, { status: 404 });
 
   const body = await req.json();
   const parsed = RespondSchema.safeParse(body);

@@ -190,3 +190,13 @@ Vercel → Project → Settings → Environment Variables (then Redeploy, *witho
 
 `NEXT_PUBLIC_*` values are baked in at build time, so a redeploy is required after changing them.
 Email prefers Resend when `RESEND_API_KEY` is set and falls back to Brevo (`BREVO_API_KEY`).
+
+
+## Sourcing Desk — how access and review work
+
+1. A buyer submits a sourcing request (no account needed). It starts as **PENDING_REVIEW** and is **not** visible anywhere public.
+2. Admin → Sourcing Requests → the "awaiting review" panel: **Approve for desk** or **Reject**. Only approved, still-open requests are shown on the Sourcing Desk.
+3. Only **approved agents** can open the desk. To become one: enroll in the Academy → admin sets the enrollment to **completed (graduated)** in Admin → Academy → Enrollments → the student applies → admin approves them in Admin → Sourcing Desk Access.
+4. Agents never see buyer name, company, country, email or WhatsApp. Text fields are also scrubbed for phone numbers, emails and links (`src/lib/scrub.ts`). Agents respond inside AgroLink; AgroLink makes the introduction.
+
+**Database change:** adds `SourcingRequest.deskStatus` / `deskReviewedAt` (existing requests become PENDING_REVIEW). Run `npx prisma db push` against the production database **before** deploying this version.

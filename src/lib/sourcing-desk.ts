@@ -30,3 +30,14 @@ export async function getSourcingDeskAccess(): Promise<SourcingDeskAccess> {
 
   return { status: user.sourcingAgentStatus, userId } as SourcingDeskAccess;
 }
+
+// "Graduated" = an admin has marked one of the user's Academy enrollments as
+// completed (Admin → Academy → Enrollments). Self-reporting isn't enough.
+export async function hasGraduated(userId: string) {
+  const count = await db.enrollment.count({
+    where: { userId, status: { equals: "completed", mode: "insensitive" } },
+  });
+  return count > 0;
+}
+
+export const DESK_OPEN_STATUSES = ["NEW", "CONTACTED", "SOURCING"] as const;

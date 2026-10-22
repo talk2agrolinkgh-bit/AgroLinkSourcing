@@ -17,7 +17,8 @@ const ROLE_LABEL: Record<string, string> = {
   BUYER: "Buyer",
   SUPPLIER: "Verified Supplier",
   FARMER: "Farm Participant",
-  STUDENT: "Academy Student",
+  FARM_PARTICIPANT: "Farm Participant",
+  ACADEMY_STUDENT: "Academy Student",
 };
 
 export default async function AccountPage() {
@@ -65,6 +66,35 @@ export default async function AccountPage() {
             <p className="text-xs text-ink-soft mt-0.5">Supplier profile · {supplierProfile.country}</p>
           </div>
           <VerificationBadge status={supplierProfile.status} />
+        </div>
+      )}
+
+      {(!currentUser?.sourcingAgentStatus || currentUser.sourcingAgentStatus === "NONE") && (
+        <div className="mb-8 p-5 rounded-xl2 border border-forest-100 bg-cream-50 card-shadow">
+          <p className="font-display font-semibold text-forest-800">Your path to the Sourcing Desk</p>
+          <p className="text-xs text-ink-soft mt-0.5 mb-4">
+            The Sourcing Desk shows reviewed buyer requests to trained agents. Here&apos;s where you are:
+          </p>
+          <ol className="space-y-2 text-sm">
+            {[
+              { done: enrollments.some((e) => e.status.toLowerCase() !== "cancelled"), label: "Enroll in the Produce-Sourcing Academy", href: "/academy", cta: "View Academy" },
+              { done: enrollments.some((e) => e.status.toLowerCase() === "completed"), label: "Graduate (AgroLink marks your course completed)" },
+              { done: false, label: "Apply for Sourcing Desk access", href: enrollments.some((e) => e.status.toLowerCase() === "completed") ? "/sourcing-desk" : undefined, cta: "Apply" },
+              { done: false, label: "AgroLink approves your access" },
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${step.done ? "bg-forest-700 text-cream-50" : "bg-forest-100 text-forest-700"}`}>
+                  {step.done ? "✓" : i + 1}
+                </span>
+                <span className={step.done ? "text-ink-soft line-through" : ""}>
+                  {step.label}
+                  {!step.done && step.href && (
+                    <a href={step.href} className="ml-2 text-forest-700 font-semibold text-xs">{step.cta} →</a>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
       )}
 
