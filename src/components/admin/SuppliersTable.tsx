@@ -23,13 +23,19 @@ export function SuppliersTable({ initialSuppliers }: { initialSuppliers: Supplie
   const toast = useToast();
 
   async function setStatus(id: string, status: "VERIFIED" | "PENDING" | "UNVERIFIED") {
+    const before = suppliers.find((s) => s.id === id)?.status;
     setSuppliers((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)));
-    await fetch(`/api/admin/suppliers/${id}`, {
+    const res = await fetch(`/api/admin/suppliers/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    });
-    toast(status === "VERIFIED" ? "Supplier verified." : "Supplier status updated.");
+    }).catch(() => null);
+    if (!res || res.status === 202 || !res.ok) {
+      if (before) setSuppliers((prev) => prev.map((s) => (s.id === id ? { ...s, status: before } : s)));
+      toast(res && res.status === 202 ? "Sent to the Super Admin for final approval." : "Couldn't update. Try again.");
+    } else {
+      toast(status === "VERIFIED" ? "Supplier verified." : "Supplier status updated.");
+    }
     startTransition(() => router.refresh());
   }
 

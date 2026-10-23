@@ -43,6 +43,8 @@ export const authOptions: NextAuthOptions = {
         const admin = await db.adminUser.findUnique({ where: { email: credentials.email } });
         if (!admin) return null;
 
+        if (!admin.active) return null; // suspended admins cannot sign in
+
         const valid = await bcrypt.compare(credentials.password, admin.passwordHash);
         if (!valid) return null;
 
@@ -72,6 +74,16 @@ export const authOptions: NextAuthOptions = {
         // just works.
         token.role = (user as any).role;
         token.id = (user as any).id;
+      }
+      // Admin sessions are re-checked against the database on every request,
+      // so suspending or removing an admin takes effect immediately instead of
+      // when their cookie eventually expires.
+      if (token.role === "ADMIN" && token.id) {
+        const admin = await db.adminUser.findUnique({ where: { id: token.id as string }, select: { active: true } });
+        if (!admin || !admin.active) {
+          delete (token as any).role;
+          delete (token as any).id;
+        }
       }
       return token;
     },

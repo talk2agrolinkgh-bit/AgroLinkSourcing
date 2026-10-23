@@ -27,15 +27,19 @@ export function PostUpdateModal({
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const notify = form.get("notify") === "on";
-    await fetch(`/api/admin/farm-projects/${projectId}/updates`, {
+    const res = await fetch(`/api/admin/farm-projects/${projectId}/updates`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: form.get("title"), body: form.get("body"), photoUrls, videoUrls, notify }),
-    });
+    }).catch(() => null);
+    if (!res || !res.ok) {
+      toast("Couldn't post the update. Try again.");
+      return;
+    }
     setOpen(false);
     setPhotoUrls([]);
     setVideoUrls([]);
-    toast(`Update posted${notify ? " and participants notified." : "."}`);
+    toast(res.status === 202 ? "Update sent to the Super Admin for final approval." : `Update posted${notify ? " and participants notified." : "."}`);
     router.refresh();
   }
 

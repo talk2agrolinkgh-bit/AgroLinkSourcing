@@ -38,12 +38,19 @@ export function SourcingRequestsBoard({ initialRequests }: { initialRequests: Re
   }
 
   async function setDesk(id: string, deskStatus: string) {
+    const before = requests.find((r) => r.id === id)?.deskStatus;
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, deskStatus } : r)));
     const res = await fetch(`/api/admin/sourcing-requests/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ deskStatus }),
-    });
+    }).catch(() => null);
+    if (!res || res.status === 202 || !res.ok) {
+      if (before) setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, deskStatus: before } : r)));
+      toast(res && res.status === 202 ? "Sent to the Super Admin for final approval." : "Couldn't update. Try again.");
+      startTransition(() => router.refresh());
+      return;
+    }
     toast(res.ok ? (deskStatus === "APPROVED" ? "Approved — now visible on the Sourcing Desk." : deskStatus === "REJECTED" ? "Rejected — hidden from the desk." : "Moved back to review.") : "Couldn't update. Try again.");
     startTransition(() => router.refresh());
   }

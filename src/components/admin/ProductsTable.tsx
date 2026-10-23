@@ -26,12 +26,20 @@ export function ProductsTable({ initialProducts }: { initialProducts: Product[] 
   const toast = useToast();
 
   async function patch(id: string, data: Partial<Product>) {
+    const before = products.find((p) => p.id === id);
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...data } : p)));
-    await fetch(`/api/admin/products/${id}`, {
+    const res = await fetch(`/api/admin/products/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    });
+    }).catch(() => null);
+
+    // 202 = queued for the Super Admin: the change is NOT live, so show the
+    // product as it really is until it's approved.
+    if (!res || res.status === 202 || !res.ok) {
+      if (before) setProducts((prev) => prev.map((p) => (p.id === id ? before : p)));
+      toast(res && res.status === 202 ? "Sent to the Super Admin for final approval." : "Couldn't update. Try again.");
+    }
     startTransition(() => router.refresh());
   }
 

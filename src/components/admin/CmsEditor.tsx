@@ -16,12 +16,16 @@ export function CmsEditor({ initialBlocks }: { initialBlocks: Block[] }) {
 
   async function save(id: string) {
     const block = blocks.find((b) => b.id === id)!;
-    await fetch(`/api/admin/cms/${id}`, {
+    const res = await fetch(`/api/admin/cms/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value: block.value }),
-    });
-    toast("Saved. Live on the homepage.");
+    }).catch(() => null);
+    if (!res || !res.ok) {
+      toast("Couldn't save. Try again.");
+      return;
+    }
+    toast(res.status === 202 ? "Sent to the Super Admin — it goes live once approved." : "Saved. Live on the homepage.");
   }
 
   return (

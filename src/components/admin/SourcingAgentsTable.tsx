@@ -21,12 +21,19 @@ export function SourcingAgentsTable({ initialAgents }: { initialAgents: Agent[] 
   const toast = useToast();
 
   async function setStatus(id: string, status: "APPROVED" | "REVOKED" | "PENDING") {
+    const before = agents.find((a) => a.id === id)?.sourcingAgentStatus;
     setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, sourcingAgentStatus: status } : a)));
-    await fetch(`/api/admin/sourcing-agents/${id}`, {
+    const res = await fetch(`/api/admin/sourcing-agents/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    });
+    }).catch(() => null);
+    if (!res || res.status === 202 || !res.ok) {
+      if (before) setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, sourcingAgentStatus: before } : a)));
+      toast(res && res.status === 202 ? "Sent to the Super Admin for final approval." : "Couldn't update. Try again.");
+      startTransition(() => router.refresh());
+      return;
+    }
     toast(status === "APPROVED" ? "Access granted." : status === "REVOKED" ? "Access revoked." : "Moved back to pending.");
     startTransition(() => router.refresh());
   }

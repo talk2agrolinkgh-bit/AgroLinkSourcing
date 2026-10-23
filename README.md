@@ -87,7 +87,7 @@ npm run db:push
 
 # 5. Seed demo data + create your first admin login
 npm run db:seed
-# → creates admin@agrolinksourcing.com / agrolink-admin-2026 — CHANGE THIS PASSWORD
+# → creates admin@agrolink.africa / agrolink-admin-2026 (local demo only) — CHANGE THIS PASSWORD
 #   immediately: update prisma/seed.ts or update the row directly, then re-hash
 #   with bcrypt before deploying anywhere public.
 
@@ -200,3 +200,31 @@ Email prefers Resend when `RESEND_API_KEY` is set and falls back to Brevo (`BREV
 4. Agents never see buyer name, company, country, email or WhatsApp. Text fields are also scrubbed for phone numbers, emails and links (`src/lib/scrub.ts`). Agents respond inside AgroLink; AgroLink makes the introduction.
 
 **Database change:** adds `SourcingRequest.deskStatus` / `deskReviewedAt` (existing requests become PENDING_REVIEW). Run `npx prisma db push` against the production database **before** deploying this version.
+
+
+## Creating or resetting the admin login (live database)
+
+Do not run the demo seed against production. Instead:
+
+```powershell
+$env:DATABASE_URL = 'postgresql://...live url...'
+$env:ADMIN_EMAIL = 'you@yourdomain.com'
+$env:ADMIN_PASSWORD = 'a-long-password-12+chars'
+npm run admin:create
+Remove-Item Env:DATABASE_URL, Env:ADMIN_EMAIL, Env:ADMIN_PASSWORD
+```
+
+Running it again with the same email resets that admin's password.
+
+
+## Super Admin and final approvals
+
+- **Roles:** `SUPER_ADMIN` (final approval, manages the team, flips the switches) and `ADMIN` (prepares work). Manage them in Admin -> Team.
+- **Gates** (Admin -> Approvals, each has an ON/OFF switch; no row = ON): Products, Suppliers, Sourcing Desk requests, Sourcing Desk agents, Farm projects, Homepage/CMS.
+- **What is gated:** changes that *release* something — verify/publish/feature a product, verify a supplier, approve a desk request, grant desk access, publish a farm project, post a farm update, edit homepage text. An admin's attempt is stored as an approval request (HTTP 202) and only takes effect when a Super Admin approves it.
+- **Never gated:** changes that *restrict* — unpublish, unverify/suspend, reject, revoke — plus normal edits and pipeline stage moves.
+- **Switch a gate OFF** and admins release those changes directly. Super Admins always apply directly.
+- Suspending an admin takes effect on their very next request (sessions are re-checked against the database). You can't change your own role or suspend yourself, so one active Super Admin always remains.
+- Make yourself Super Admin (or reset your password): `npm run admin:create` (see "Creating or resetting the admin login"). It defaults to SUPER_ADMIN; set `ADMIN_ROLE=ADMIN` for a regular admin.
+
+**Database change:** adds `AdminUser.role`/`active`, `ApprovalSetting`, `ApprovalRequest`. Run `npx prisma db push` against production **before** deploying, then run `npm run admin:create` to promote your account.

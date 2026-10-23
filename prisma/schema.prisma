@@ -175,7 +175,50 @@ model AdminUser {
   email        String   @unique
   name         String
   passwordHash String   // bcrypt hash — never store plaintext; see src/lib/auth.ts
+  role         AdminRole @default(ADMIN)
+  active       Boolean  @default(true) // false = suspended; blocks sign-in and all admin actions
   createdAt    DateTime @default(now())
+}
+
+// SUPER_ADMIN gives final approval and manages the team. ADMIN prepares work;
+// anything that would go live is queued for a super admin while its gate is on.
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+// One row per approval gate (see src/lib/approvals.ts GATES). A missing row
+// means the gate is ON. Super admin flips these in Admin -> Approvals.
+model ApprovalSetting {
+  key       String   @id
+  enabled   Boolean  @default(true)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// A change an admin asked for that needs a super admin's final sign-off. The
+// change is stored (payload) and only executed when approved.
+model ApprovalRequest {
+  id              String         @id @default(cuid())
+  gate            String
+  type            String
+  summary         String
+  payload         Json
+  status          ApprovalStatus @default(PENDING)
+  requestedById   String
+  requestedByName String
+  decidedByName   String?
+  decidedAt       DateTime?
+  note            String?
+  createdAt       DateTime       @default(now())
+
+  @@index([status, createdAt])
 }
 
 // Editable homepage/site text blocks, managed from Admin → CMS.

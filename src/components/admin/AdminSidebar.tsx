@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  LayoutGrid, Package, Truck, Inbox, Leaf, BookOpen, Flag, LayoutTemplate, LogOut, ShieldCheck,
+  LayoutGrid, Package, Truck, Inbox, Leaf, BookOpen, Flag, LayoutTemplate, LogOut, ShieldCheck, CheckCircle2, Users,
 } from "lucide-react";
 
 const NAV = [
@@ -19,9 +19,11 @@ const NAV = [
   { href: "/admin/academy", label: "Academy", icon: BookOpen },
   { href: "/admin/leads", label: "Leads", icon: Flag },
   { href: "/admin/cms", label: "CMS", icon: LayoutTemplate },
+  { href: "/admin/approvals", label: "Approvals", icon: CheckCircle2 },
+  { href: "/admin/team", label: "Team", icon: Users, superOnly: true },
 ];
 
-export function AdminSidebar({ adminName }: { adminName: string }) {
+export function AdminSidebar({ adminName, isSuper, pending }: { adminName: string; isSuper: boolean; pending: number }) {
   const pathname = usePathname();
 
   return (
@@ -34,7 +36,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.filter((n: any) => !n.superOnly || isSuper).map(({ href, label, icon: Icon }) => {
           const active = href === "/admin" ? pathname === href : pathname?.startsWith(href);
           return (
             <Link
@@ -46,6 +48,9 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
             >
               <Icon size={18} className="shrink-0" />
               {label}
+              {href === "/admin/approvals" && pending > 0 && (
+                <span className="ml-auto text-[11px] font-semibold bg-gold-600 text-cream-50 rounded-full px-2 py-0.5">{pending}</span>
+              )}
             </Link>
           );
         })}

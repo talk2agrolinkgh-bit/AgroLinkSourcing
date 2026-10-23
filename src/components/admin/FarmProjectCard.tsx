@@ -15,12 +15,14 @@ type Project = {
   crop: string;
   sizeAcres: number;
   stage: string;
+  published: boolean;
   participants: any[];
   updates: { id: string; title: string; body: string; postedAt: string }[];
 };
 
 export function FarmProjectCard({ project }: { project: Project }) {
   const [stage, setStage] = useState(project.stage);
+  const [published, setPublished] = useState(project.published);
   const [, startTransition] = useTransition();
   const router = useRouter();
   const toast = useToast();
@@ -33,6 +35,23 @@ export function FarmProjectCard({ project }: { project: Project }) {
       body: JSON.stringify({ stage: next }),
     });
     toast(`Project stage updated to ${next.replace("_", " ")}.`);
+    startTransition(() => router.refresh());
+  }
+
+  async function togglePublished() {
+    const next = !published;
+    setPublished(next);
+    const res = await fetch(`/api/admin/farm-projects/${project.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ published: next }),
+    }).catch(() => null);
+    if (!res || res.status === 202 || !res.ok) {
+      setPublished(!next);
+      toast(res && res.status === 202 ? "Sent to the Super Admin for final approval." : "Couldn't update. Try again.");
+    } else {
+      toast(next ? "Project published." : "Project unpublished.");
+    }
     startTransition(() => router.refresh());
   }
 
@@ -54,6 +73,13 @@ export function FarmProjectCard({ project }: { project: Project }) {
       >
         {STAGES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
       </select>
+
+      <button
+        onClick={togglePublished}
+        className={`mt-3 px-2 py-1 rounded-full text-xs font-semibold ${published ? "bg-forest-100 text-forest-700" : "bg-ink/5 text-ink-soft"}`}
+      >
+        {published ? "Published — click to unpublish" : "Draft — click to publish"}
+      </button>
 
       <div className="mt-3">
         <PostUpdateModal projectId={project.id} projectName={project.name} recentUpdates={project.updates} />

@@ -1,15 +1,23 @@
 // src/app/api/admin/cms/[id]/route.ts
+// Homepage text goes live to everyone, so edits go through the CMS gate.
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions, isAdminSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getAdminActor, releaseChange, outcomeResponse } from "@/lib/approvals";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getServerSession(authOptions);
-  if (!isAdminSession(session)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const actor = await getAdminActor();
+  if (!actor) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { value } = await req.json();
-  const block = await db.siteContent.update({ where: { id }, data: { value } });
-  return NextResponse.json(block);
+  const block = await db.siteContent.findUnique({ where: { id }, select: { label: true } });
+  if (!block) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const outcome = await releaseChange({
+    gate: "CMS",
+    actor,
+    change: { type: "cms.update", id, value: String(value ?? "") },
+    summary: `Homepage text "${block.label}": ${String(value ?? "").slice(0, 80) || "(blank)"}`,
+  });
+  return outcomeResponse(outcome, NextResponse);
 }

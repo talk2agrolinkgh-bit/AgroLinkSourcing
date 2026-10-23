@@ -14,7 +14,7 @@ async function main() {
   await db.adminUser.upsert({
     where: { email: "admin@agrolink.africa" },
     update: {},
-    create: { email: "admin@agrolink.africa", name: "A. Mensah", passwordHash },
+    create: { email: "admin@agrolink.africa", name: "A. Mensah", passwordHash, role: "SUPER_ADMIN" },
   });
 
   // ---------- Product categories ----------

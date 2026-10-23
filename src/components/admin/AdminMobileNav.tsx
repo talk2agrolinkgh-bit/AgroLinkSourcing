@@ -4,7 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LayoutGrid, Package, Truck, Inbox, Leaf, BookOpen, Flag, LayoutTemplate, ShieldCheck } from "lucide-react";
+import { Menu, X, LayoutGrid, Package, Truck, Inbox, Leaf, BookOpen, Flag, LayoutTemplate, ShieldCheck, CheckCircle2, Users } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "Overview", icon: LayoutGrid },
@@ -16,9 +16,11 @@ const NAV = [
   { href: "/admin/academy", label: "Academy", icon: BookOpen },
   { href: "/admin/leads", label: "Leads", icon: Flag },
   { href: "/admin/cms", label: "CMS", icon: LayoutTemplate },
+  { href: "/admin/approvals", label: "Approvals", icon: CheckCircle2 },
+  { href: "/admin/team", label: "Team", icon: Users, superOnly: true },
 ];
 
-export function AdminMobileNav() {
+export function AdminMobileNav({ isSuper, pending }: { isSuper: boolean; pending: number }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -32,7 +34,7 @@ export function AdminMobileNav() {
       </div>
       {open && (
         <nav className="px-3 pb-3 space-y-1">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.filter((n: any) => !n.superOnly || isSuper).map(({ href, label, icon: Icon }) => {
             const active = href === "/admin" ? pathname === href : pathname?.startsWith(href);
             return (
               <Link
@@ -44,6 +46,9 @@ export function AdminMobileNav() {
                 }`}
               >
                 <Icon size={18} /> {label}
+                {href === "/admin/approvals" && pending > 0 && (
+                  <span className="ml-auto text-[11px] font-semibold bg-gold-600 text-cream-50 rounded-full px-2 py-0.5">{pending}</span>
+                )}
               </Link>
             );
           })}
